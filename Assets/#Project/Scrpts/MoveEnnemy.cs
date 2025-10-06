@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class MoveEnnemy : MonoBehaviour, IPoolClient
 {
-    //[SerializeField] private Camera cam;
+    private Camera cam;
     [SerializeField] private float moveSpeed = 5f;
 
-    // Récupération du bord gauche de la caméra 
+    // Rï¿½cupï¿½ration du bord gauche de la camï¿½ra 
     private Vector3 leftBorder;
     private Vector3 rightBorder;
 
@@ -15,14 +15,14 @@ public class MoveEnnemy : MonoBehaviour, IPoolClient
 
     [HideInInspector] public SpawnSide sp;
 
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        //leftBorder = cam.ViewportToWorldPoint(new Vector3(0, 0.5f, 0));
-        //rightBorder = cam.ViewportToWorldPoint(new Vector3(1, 0.5f, 0));
-        rightBorder = new Vector3(0, random = Random.Range(minHeight, maxHeight), 0);
-        leftBorder = new Vector3(-20, random , 0);
+        cam = FindFirstObjectByType<Camera>();
+        leftBorder = cam.ViewportToWorldPoint(new Vector3(-0.6f, random = Random.Range(minHeight, maxHeight), 0));
+        rightBorder = cam.ViewportToWorldPoint(new Vector3(0.5f, random, 0));
+        //rightBorder = new Vector3(0, random = Random.Range(minHeight, maxHeight), 0);
+        //leftBorder = new Vector3(-20, random , 0);
         transform.position = rightBorder;
     }
 
