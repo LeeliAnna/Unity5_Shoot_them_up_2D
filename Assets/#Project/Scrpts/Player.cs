@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
@@ -7,9 +10,13 @@ using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
+    private const int LIVES = 3; 
+
     [SerializeField] private InputActionAsset actions;
     [SerializeField] private float speed = 5f;
     [SerializeField] private Camera cam;
+    [SerializeField] private float invulnerability = 1f;
+    [SerializeField] private HeartPanel heartPanel;
     
 
     private InputAction move;
@@ -24,10 +31,16 @@ public class Player : MonoBehaviour
     private float topLimit;
     private float bottomLimit;
     private Bounds spriteBounds;
-    private float spriteBoundLeft;
-    private float spriteBoundRight;
-    private float spriteBoundTop;
-    private float spriteBoundBottom;
+    private bool isInvincible = false;
+    private int currentLives = LIVES;
+
+    Vector2 half;
+    private float minX;
+    private float maxX;
+    private float minY;
+    private float maxY;
+
+
 
     void Awake()
     {
@@ -38,17 +51,21 @@ public class Player : MonoBehaviour
 
         // récupération de la taille de la caméra
         rightLimit = cam.orthographicSize * cam.aspect;
-        leftLimit = -rightLimit;
+        leftLimit = - rightLimit;
         topLimit = cam.orthographicSize;
-        bottomLimit = -topLimit;
+        bottomLimit = - topLimit;
 
         // Recupération des bords du player
         spriteBounds = spriteRenderer.bounds;
-        // spriteBoundLeft = spriteBounds.center.x - spriteBounds.extents.x;
-        // spriteBoundRight = spriteBounds.center.x + spriteBounds.extents.x;
-        // spriteBoundTop = spriteBounds.center.y + spriteBounds.extents.y;
-        // spriteBoundBottom = spriteBounds.center.y - spriteBounds.extents.y;
-        
+
+        // Recuperation des limites du sprite et définition des position maximum en fonction de l'écran
+        half = new Vector2(spriteBounds.extents.x, spriteBounds.extents.y);
+        minX = leftLimit + half.x;
+        maxX = rightLimit - half.x;
+        minY = bottomLimit + half.y;
+        maxY = topLimit - half.y;
+
+        heartPanel.SetLives(currentLives);
 
         // rightBorder = cameraManager.GetRightBorderPoints(0);
         // leftBorder = cameraManager.GetLeftBorderPoints(0);
@@ -68,40 +85,53 @@ public class Player : MonoBehaviour
     {
         Move();
     }
-
-    private void Move()
-    {
-            Debug.Log(spriteBounds.size);
-        // Chercher dans bounds du spriteRenderer
-        Vector3 position = transform.position;
-        if (position.x >= rightLimit)
-        {
-            Debug.Log(spriteBounds.size);
-            Debug.Log(rightLimit - spriteBounds.size.x);
-            //position.x = rightLimit;
-            position.x = rightLimit - spriteBounds.size.x;
-        }
-        else if (position.y >= topLimit)
-        {
-            position.y = topLimit;
-        }
-        else if (position.x <= leftLimit)
-        {
-            position.x = leftLimit;
-        }
-        else if (position.y <= bottomLimit)
-        {
-            position.y = bottomLimit;
-        }
-        transform.position = position;
-
-        moveInput = actions["Move"].ReadValue<Vector2>();
-        //transform.Translate(move.ReadValue<float>() * speed * Time.deltaTime, 0f, 0f);
-    }
-
     void FixedUpdate()
     {
         rb.linearVelocity = moveInput * speed * Time.deltaTime;
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy") && !isInvincible)
+        {
+            TakeDamage();
+        }
+    }
+
+    private void Move()
+    {
+        // Chercher dans bounds du spriteRenderer
+        Vector3 position = transform.position;
+
+        // Verification que le player se trouve bien dans les limites que j'ai définies et replace le player au besoin
+        position.x = Mathf.Clamp(position.x, minX, maxX);
+        position.y = Mathf.Clamp(position.y, minY, maxY);
+        
+        transform.position = position;
+
+        moveInput = actions["Move"].ReadValue<Vector2>();
+    }
+
+    private void TakeDamage()
+    {
+        Debug.Log($"Nombre de vies :  {currentLives}");
+        currentLives--;
+        heartPanel.SetLives(currentLives);
+        StartCoroutine(Invincibility());
+    }
+
+    private IEnumerator Invincibility()
+    {
+        isInvincible = true;
+        for (int i = 0; i < 6; i++)
+        {
+            spriteRenderer.enabled = !spriteRenderer.enabled;
+            yield return new WaitForSeconds(invulnerability / 6f);
+        }
+        spriteRenderer.enabled = true;
+        isInvincible = false;
+    }
+
+
 
 }
