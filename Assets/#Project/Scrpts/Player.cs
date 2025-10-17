@@ -10,7 +10,8 @@ using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
-    private const int LIVES = 3; 
+    private const int LIVES = 3;
+    private const string INPUT_SHOOT_ACTION = "Shoot";
 
     [SerializeField] private InputActionAsset actions;
     [SerializeField] private float speed = 5f;
@@ -34,6 +35,8 @@ public class Player : MonoBehaviour
     private bool isInvincible = false;
     private int currentLives = LIVES;
 
+    private Bullet bullet;
+
     Vector2 half;
     private float minX;
     private float maxX;
@@ -48,6 +51,7 @@ public class Player : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         cam = FindFirstObjectByType<Camera>();
+        bullet = GetComponent<Bullet>();
 
         // récupération de la taille de la caméra
         rightLimit = cam.orthographicSize * cam.aspect;
@@ -74,11 +78,13 @@ public class Player : MonoBehaviour
     void OnEnable()
     {
         actions.FindActionMap("Player").Enable();
+        actions.FindActionMap("Player").FindAction(INPUT_SHOOT_ACTION).performed += Shoot;
     }
 
     void OnDisable()
     {
         actions.FindActionMap("Player").Disable();
+        actions.FindActionMap("Player").FindAction(INPUT_SHOOT_ACTION).performed -= Shoot;
     }
 
     void Update()
@@ -132,6 +138,9 @@ public class Player : MonoBehaviour
         isInvincible = false;
     }
 
-
+    private void Shoot(InputAction.CallbackContext context)
+    {
+        
+    }
 
 }
